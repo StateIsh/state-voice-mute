@@ -10,9 +10,16 @@ permissions:
     description: Allows to bypass mutes
   voicechat_mute.mute:
     description: Allows to mute users
+  voicechat_mute.hide_muted:
+    description: Allows to hide muted banner
+    default: true
 commands:
   voicechatmute:
     description: Manage voice chat mutes
     permission: voicechat_mute.mute
+    usage: Invalid command syntax
+  hidemute:
+    description: Hide muted banner
+    permission: voicechat_mute.hide_muted
     usage: Invalid command syntax
 depend: [ voicechat ]

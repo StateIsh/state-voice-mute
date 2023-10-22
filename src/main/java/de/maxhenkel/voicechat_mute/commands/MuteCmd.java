@@ -1,11 +1,11 @@
-package de.maxhenkel.voicechat_mute;
+package de.maxhenkel.voicechat_mute.commands;
 
 import com.github.puregero.multilib.MultiLib;
+import de.maxhenkel.voicechat_mute.MuteVoicechatPlugin;
+import de.maxhenkel.voicechat_mute.VoicechatMute;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,8 +13,17 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
-public class VoiceChatmuteCommands implements CommandExecutor, TabCompleter {
+public class MuteCmd implements CommandExecutor, TabCompleter {
     public static final String VOICECHAT_COMMAND = "voicechatmute";
+
+    public static void init() {
+        VoicechatMute plugin = VoicechatMute.getInstance();
+        PluginCommand command = plugin.getCommand(VOICECHAT_COMMAND);
+        if (command != null) {
+            command.setExecutor(new MuteCmd());
+            command.setTabCompleter(new MuteCmd());
+        }
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -80,6 +89,13 @@ public class VoiceChatmuteCommands implements CommandExecutor, TabCompleter {
                     continue;
                 }
                 player.sendMessage(ChatColor.RED + "You have been muted");
+
+                if (MultiLib.isExternalPlayer(player)) continue;
+                // Check if player has hidden the bar
+                String data = MultiLib.getData(player, "voicechat_mute:hide_bar");
+                if (data != null && !data.equals("true")) {
+                    player.showBossBar(VoicechatMute.BOSS_BAR);
+                }
             }
             return true;
         }
@@ -96,6 +112,9 @@ public class VoiceChatmuteCommands implements CommandExecutor, TabCompleter {
                     continue;
                 }
                 player.sendMessage(ChatColor.GREEN + "You have been unmuted");
+
+                if (MultiLib.isExternalPlayer(player)) continue;
+                player.hideBossBar(VoicechatMute.BOSS_BAR);
             }
             return true;
         }
@@ -116,7 +135,9 @@ public class VoiceChatmuteCommands implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             return List.of("help", "mute", "unmute", "muteall", "unmuteall");
         } else if (args.length == 2) {
-            return MultiLib.getAllOnlinePlayers().stream().map(player -> player.getName()).toList();
+            return MultiLib.getAllOnlinePlayers().stream().map(HumanEntity::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .toList();
         }
         return List.of();
     }
